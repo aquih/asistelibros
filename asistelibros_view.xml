@@ -8,20 +8,27 @@
             <field name="type">form</field>
             <field name="arch" type="xml">
                 <form string="Seleccione diario y períodos">
-                    <group col="6" colspan="4">
-                        <field name="company_id"/>
-                        <field name="impuesto_id" domain="[('name','=','IVA por Pagar'), ('company_id','=',company_id)]"/>
-                        <field name="base_id" domain="[('name','=','Base Impositiva de Ventas'), ('company_id','=',company_id)]"/>
-                        <field name="archivo" filename="reporte.xls"/>
+                    <group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="archivo" filename="reporte.xls"/>
+                        </group>
+                        <group>
+                            <field name="impuesto_id" domain="[('name','=','IVA por Pagar'), ('company_id','=',company_id)]"/>
+                            <field name="base_id" domain="[('name','=','Base Impositiva de Ventas'), ('company_id','=',company_id)]"/>
+                        </group>
                     </group>
-                    <group col="4" colspan="4">
-                        <field name="diarios_id" nolabel="1"/>
+                    <group>
+                        <separator colspan="4" string="Diarios"/>
+                        <field name="diarios_id" nolabel="1" domain="[('type','in',['sale','sale_refund'])]"/>
+                        <separator colspan="4" string="Periodos"/>
                         <field name="periodos_id" nolabel="1"/>
                     </group>
-                    <group col="2" colspan="4">
-                        <button icon="gtk-cancel" special="cancel" string="Cancelar"/>
-                        <button icon="gtk-ok" name="reporte" string="Reporte" type="object"/>
-                    </group>
+                    <footer>
+                        <button name="generar" string="Reporte" type="reporte" class="oe_highlight"/>
+                        o
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
                 </form>
             </field>
         </record>
@@ -36,17 +43,23 @@
             <field name="type">form</field>
             <field name="arch" type="xml">
                 <form string="Seleccione diario y períodos">
-                    <group col="6" colspan="4">
-                        <field name="company_id"/>
-                        <field name="impuesto_id" domain="[('name','=','IVA por Cobrar'), ('company_id','=',company_id)]"/>
-                        <field name="base_id" domain="[('name','=','Base Impositiva de Compras'), ('company_id','=',company_id)]"/>
-                        <field name="archivo" filename="reporte.xls"/>
+                    <group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="archivo" filename="reporte.xls"/>
+                        </group>
+                        <group>
+                            <field name="impuesto_id" domain="[('name','=','IVA por Cobrar'), ('company_id','=',company_id)]"/>
+                            <field name="base_id" domain="[('name','=','Base Impositiva de Compras'), ('company_id','=',company_id)]"/>
+                        </group>
                     </group>
-                    <group col="4" colspan="4">
-                        <field name="diarios_id" nolabel="1"/>
+                    <group>
+                        <separator colspan="4" string="Diarios"/>
+                        <field name="diarios_id" nolabel="1" domain="[('type','in',['purchase','purchase_refund'])]"/>
+                        <separator colspan="4" string="Periodos"/>
                         <field name="periodos_id" nolabel="1"/>
                     </group>
-                    <group col="2" colspan="4">
+                    <group>
                         <button icon="gtk-cancel" special="cancel" string="Cancelar"/>
                         <button icon="gtk-ok" name="reporte" string="Reporte" type="object"/>
                     </group>

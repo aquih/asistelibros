@@ -1,9 +1,9 @@
 # -*- encoding: utf-8 -*-
 
-from osv import osv, fields
-import logging
+from openerp.osv import osv, fields
 from datetime import datetime
 import base64
+import logging
 
 class asistente_ventas(osv.osv):
     _name = 'asistelibros.asistente_ventas'
