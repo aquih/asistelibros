@@ -35,7 +35,7 @@ class asistente_ventas(osv.osv):
                 total_lineas_servicio = 0
                 total_lineas_bien = 0
 
-                if f.address_invoice_id.country_id and f.address_invoice_id.country_id.id != 91:
+                if f.partner_id.country_id and f.partner_id.country_id.id != 91:
                     local = False
 
                 if f.currency_id.id == f.company_id.currency_id.id:
@@ -262,14 +262,22 @@ class asistente_ventas(osv.osv):
         datos = base64.b64encode(texto.encode('utf-8'))
         self.write(cr, uid, ids, {'archivo': datos})
 
-        return True
+        return {
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'asistelibros.asistente_ventas',
+            'res_id': ids[0],
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+        }
 
     _columns = {
         'company_id': fields.many2one('res.company', 'Empresa', required=True),
-        'diarios_id': fields.many2many('account.journal', 'ventas_diario_rel', 'ventas_id', 'diario_id', 'Diarios', required=True),
+        'diarios_id': fields.many2many('account.journal', 'asistelibros_ventas_diario_rel', 'ventas_id', 'diario_id', 'Diarios', required=True),
         'impuesto_id': fields.many2one('account.tax.code', 'Impuesto', required=True),
         'base_id': fields.many2one('account.tax.code', 'Base', required=True),
-        'periodos_id': fields.many2many('account.period', 'ventas_periodo_rel', 'ventas_id', 'periodo_id', 'Periodos', required=True),
+        'periodos_id': fields.many2many('account.period', 'asistelibros_ventas_periodo_rel', 'ventas_id', 'periodo_id', 'Periodos', required=True),
         'archivo': fields.binary('Reporte'),
     }
 
@@ -300,7 +308,7 @@ class asistente_compras(osv.osv):
                 total_lineas_servicio = 0
                 total_lineas_bien = 0
 
-                if f.address_invoice_id.country_id and f.address_invoice_id.country_id.id != 91:
+                if f.partner_id.country_id and f.partner_id.country_id.id != 91:
                     local = False
                 if f.documento_da:
                     local = False
@@ -544,14 +552,22 @@ class asistente_compras(osv.osv):
         datos = base64.b64encode(texto.encode('utf-8'))
         self.write(cr, uid, ids, {'archivo': datos})
 
-        return True
+        return {
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'asistelibros.asistente_compras',
+            'res_id': ids[0],
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+        }
 
     _columns = {
         'company_id': fields.many2one('res.company', 'Empresa', required=True),
-        'diarios_id': fields.many2many('account.journal', 'ventas_diario_rel', 'ventas_id', 'diario_id', 'Diarios', required=True),
+        'diarios_id': fields.many2many('account.journal', 'asistelibros_comprasdiario_rel', 'compras_id', 'diario_id', 'Diarios', required=True),
         'impuesto_id': fields.many2one('account.tax.code', 'Impuesto', required=True),
         'base_id': fields.many2one('account.tax.code', 'Base', required=True),
-        'periodos_id': fields.many2many('account.period', 'ventas_periodo_rel', 'ventas_id', 'periodo_id', 'Periodos', required=True),
+        'periodos_id': fields.many2many('account.period', 'asistelibros_compras_periodo_rel', 'compras_id', 'periodo_id', 'Periodos', required=True),
         'archivo': fields.binary('Reporte'),
     }
 

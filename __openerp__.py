@@ -13,7 +13,7 @@
     'description': """Asistelibros para Guatemala""",
     'author': 'Rodrigo Fernandez',
     'website': 'http://solucionesprisma.com/',
-    'depends' : [ 'account', 'l10n_gt' ],
+    'depends' : [ 'account', 'l10n_gt_extra' ],
     'init_xml' : [ ],
     'demo_xml' : [ ],
     'update_xml' : [ 'asistelibros_view.xml' ],
