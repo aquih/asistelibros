@@ -1,0 +1,19 @@
+<openerp>
+    <data>
+
+        <record id="asistelibrost_view_invoice_form" model="ir.ui.view">
+            <field name="name">asistelibros.view_invoice_form</field>
+            <field name="model">account.invoice</field>
+            <field name="inherit_id" ref="account.invoice_form"/>
+            <field name="arch" type="xml">
+                <field name="move_id" position="after">
+                    <field name="criva"/>
+                    <field name="valor_constancia"/>
+                    <field name="cadi"/>
+                    <field name="dua"/>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</openerp>

@@ -308,9 +308,9 @@ class asistente_compras(osv.osv):
                 total_lineas_servicio = 0
                 total_lineas_bien = 0
 
-                if f.partner_id.country_id and f.partner_id.country_id.id != 91:
+                if f.partner_id.country_id and f.partner_id.country_id.id != f.company_id.id:
                     local = False
-                if f.documento_da:
+                if f.dua or f.fauca:
                     local = False
 
                 if f.currency_id.id == f.company_id.currency_id.id:
@@ -323,16 +323,16 @@ class asistente_compras(osv.osv):
                     total_quetzales = abs(total_quetzales)
 
 
-                for l in f.invoice_line:
+                for l in f.invoice_line_ids:
                     if f.tipo_gasto == 'servicio':
                         if not f.cadi:
-                            if len(l.invoice_line_tax_id) > 0 or peq:
+                            if len(l.invoice_line_tax_ids) > 0 or peq:
                                 total_lineas_servicio += l.price_unit*l.quantity*(100-l.discount)/100
                         else:
                             total_lineas_servicio += l.price_unit*l.quantity*(100-l.discount)/100
                     else:
                         if not f.cadi:
-                            if len(l.invoice_line_tax_id) > 0 or peq:
+                            if len(l.invoice_line_tax_ids) > 0 or peq:
                                 total_lineas_bien += l.price_unit*l.quantity*(100-l.discount)/100
                         else:
                             total_lineas_bien += l.price_unit*l.quantity*(100-l.discount)/100
@@ -354,9 +354,9 @@ class asistente_compras(osv.osv):
                 if f.type == 'in_invoice':
                     if peq:
                         r.append('FPC')
-                    elif f.documento_da:
-                        r.append('DA')
                     elif f.dua:
+                        r.append('DA')
+                    elif f.fauca:
                         r.append('FA')
                     elif f.reference and len(f.reference.split()[0]) > 6:
                         r.append('FCE')
@@ -394,7 +394,7 @@ class asistente_compras(osv.osv):
                     r.append('I')
 
                 # Bien o servicio de importacion
-                if not local and not f.documento_da:
+                if not local:
                     if f.tipo_gasto in ['compra','importacion','combustible','mixto']:
                         r.append('BIEN')
                     else:
@@ -412,7 +412,7 @@ class asistente_compras(osv.osv):
                 r.append('')
 
                 # FAUCA o DUA
-                if not local and not f.documento_da:
+                if not local:
                     if f.fauca:
                         r.append('FAUCA')
                         r.append(f.fauca)
