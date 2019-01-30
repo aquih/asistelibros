@@ -12,8 +12,10 @@ import logging
 class AccountInvoice(models.Model):
     _inherit = "account.invoice"
 
-    criva = fields.Char('Constancia de retención de IVA')
-    valor_constancia = fields.Float('Valor de constancia')
-    cadi = fields.Char('CADI')
     fauca = fields.Char('FAUCA')
     dua = fields.Char('DUA')
+    cadi = fields.Char('CADI')
+    cexe = fields.Char('CEXE')
+    criva = fields.Char('CRIVA')
+    numero_constancia = fields.Char('Numero de constancia')
+    valor_constancia = fields.Float('Valor de constancia')
