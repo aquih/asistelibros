@@ -17,5 +17,4 @@ class AccountInvoice(models.Model):
     cadi = fields.Char('CADI')
     cexe = fields.Char('CEXE')
     criva = fields.Char('CRIVA')
-    numero_constancia = fields.Char('Numero de constancia')
     valor_constancia = fields.Float('Valor de constancia')
