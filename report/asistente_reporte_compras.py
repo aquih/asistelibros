@@ -27,10 +27,9 @@ class AsistenteReporteCompras(models.TransientModel):
                 total_quetzales = 0
                 total_lineas_servicio = 0
                 total_lineas_bien = 0
-                logging.warn('b')
                 if f.partner_id.country_id and f.partner_id.country_id.id != 91:
                     local = False
-                if f.documento_da:
+                if f.dua:
                     local = False
 
                 if f.currency_id.id == f.company_id.currency_id.id:
@@ -42,7 +41,6 @@ class AsistenteReporteCompras(models.TransientModel):
                                 total_quetzales += l.debit - l.credit
                     total_quetzales = abs(total_quetzales)
 
-                logging.warn('c')
                 for l in f.invoice_line_ids:
                     if f.tipo_gasto == 'servicio':
                         if not f.cadi:
@@ -59,7 +57,7 @@ class AsistenteReporteCompras(models.TransientModel):
 
                 iva = 0
                 for i in f.tax_line_ids:
-                    if i.tax_code_id.id == w.impuesto_id.id:
+                    if i.name == w.impuesto_id.name:
                         iva += i.amount
                 if f.amount_total*iva > 0:
                     iva = total_quetzales/f.amount_total*iva
@@ -74,7 +72,7 @@ class AsistenteReporteCompras(models.TransientModel):
                 if f.type == 'in_invoice':
                     if peq:
                         r.append('FPC')
-                    elif f.documento_da:
+                    elif f.dua:
                         r.append('DA')
                     elif f.dua:
                         r.append('FA')
@@ -114,7 +112,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('I')
 
                 # Bien o servicio de importacion
-                if not local and not f.documento_da:
+                if not local and not f.dua:
                     if f.tipo_gasto in ['compra','importacion','combustible','mixto']:
                         r.append('BIEN')
                     else:
@@ -132,7 +130,7 @@ class AsistenteReporteCompras(models.TransientModel):
                 r.append('')
 
                 # FAUCA o DUA
-                if not local and not f.documento_da:
+                if not local and not f.dua:
                     if f.fauca:
                         r.append('FAUCA')
                         r.append(f.fauca)
