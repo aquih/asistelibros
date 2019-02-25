@@ -248,7 +248,7 @@ class AsistenteReporteVentas(models.TransientModel):
                 l.pop(0)
                 if len(l) < 30:
                     logging.warn(l)
-                texto += '|'.join(l)+"\r\n"
+                texto += '\t'.join(l)+"\r\n"
 
             logging.warn(texto)
 
@@ -262,7 +262,7 @@ class AsistenteReporteVentas(models.TransientModel):
             f = io.BytesIO()
             libro.save(f)
             datos = base64.b64encode(texto.encode('utf-8'))
-            self.write({'archivo':datos, 'name':'asiste_ibros.xls'})
+            self.write({'archivo':datos, 'name':'asiste_ibros.asl'})
 
         return {
             'view_type': 'form',
