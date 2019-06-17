@@ -4,7 +4,6 @@ from openerp import models, fields, api, _
 from openerp.exceptions import UserError, ValidationError
 from datetime import datetime
 import time
-import xlwt
 import base64
 import io
 import logging
@@ -252,17 +251,8 @@ class AsistenteReporteVentas(models.TransientModel):
 
             logging.warn(texto)
 
-            libro = xlwt.Workbook()
-            hoja = libro.add_sheet('reporte')
-
-            xlwt.add_palette_colour("custom_colour", 0x21)
-            libro.set_colour_RGB(0x21, 200, 200, 200)
-            estilo = xlwt.easyxf('pattern: pattern solid, fore_colour custom_colour')
-
-            f = io.BytesIO()
-            libro.save(f)
             datos = base64.b64encode(texto.encode('utf-8'))
-            self.write({'archivo':datos, 'name':'asiste_ibros.asl'})
+            self.write({'archivo':datos, 'name':'asiste_ibros.txt'})
 
         return {
             'view_type': 'form',

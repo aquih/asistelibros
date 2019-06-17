@@ -268,17 +268,9 @@ class AsistenteReporteCompras(models.TransientModel):
                 texto += '\t'.join(l)+"\r\n"
 
             logging.warn(texto)
-            libro = xlwt.Workbook()
-            hoja = libro.add_sheet('reporte')
 
-            xlwt.add_palette_colour("custom_colour", 0x21)
-            libro.set_colour_RGB(0x21, 200, 200, 200)
-            estilo = xlwt.easyxf('pattern: pattern solid, fore_colour custom_colour')
-
-            f = io.BytesIO()
-            libro.save(f)
             datos = base64.b64encode(texto.encode('utf-8'))
-            self.write({'archivo':datos, 'name':'asiste_libros.asl'})
+            self.write({'archivo':datos, 'name':'asiste_libros.txt'})
 
         return {
             'view_type': 'form',
