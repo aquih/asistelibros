@@ -83,8 +83,8 @@ class asistente_ventas(osv.osv):
                     r.append(f.number[0])
                     r.append(f.number[1:])
                 else:
-                    r.append(f.internal_number[0])
-                    r.append(f.internal_number[1:])
+                    r.append(f.numero_viejo[0])
+                    r.append(f.numero_viejo[1:])
 
                 # Fecha
                 r.append(datetime.strptime(f.date_invoice,'%Y-%m-%d').strftime('%d/%m/%Y'))
