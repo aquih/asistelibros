@@ -366,9 +366,9 @@ class asistente_compras(osv.osv):
                     r.append('NC')
 
                 # Serie y numero
-                if f.reference and len(f.reference.split(None, 1)) > 1:
-                    r.append(f.reference.split(None, 1)[0])
-                    r.append(f.reference.split(None, 1)[1])
+                if f.reference and len(f.reference.split('-', 1)) > 1:
+                    r.append(f.reference.split('-', 1)[0])
+                    r.append(f.reference.split('-', 1)[1])
                 else:
                     r.append("")
                     r.append("")
