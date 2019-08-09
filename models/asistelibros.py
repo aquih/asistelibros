@@ -366,6 +366,7 @@ class asistente_compras(osv.osv):
                     r.append('NC')
 
                 # Serie y numero
+                logging.warn(f.reference)
                 if f.reference and len(f.reference.split('-', 1)) > 1:
                     r.append(f.reference.split('-', 1)[0])
                     r.append(f.reference.split('-', 1)[1])
