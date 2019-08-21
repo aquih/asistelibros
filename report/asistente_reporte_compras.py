@@ -57,7 +57,7 @@ class AsistenteReporteCompras(models.TransientModel):
 
                 iva = 0
                 for i in f.tax_line_ids:
-                    if i.name == w.impuesto_id.name:
+                    if i.tax_id.id == w.impuesto_id.id:
                         iva += i.amount
                 if f.amount_total*iva > 0:
                     iva = total_quetzales/f.amount_total*iva
@@ -265,12 +265,12 @@ class AsistenteReporteCompras(models.TransientModel):
                 l.pop(0)
                 if len(l) < 30:
                     logging.warn(l)
-                texto += '\t'.join(l)+"\r\n"
+                texto += '|'.join(l)+"\r\n"
 
             logging.warn(texto)
 
             datos = base64.b64encode(texto.encode('utf-8'))
-            self.write({'archivo':datos, 'name':'asiste_libros.txt'})
+            self.write({'archivo':datos, 'name':'asiste_libros.asl'})
 
         return {
             'view_type': 'form',

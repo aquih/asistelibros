@@ -50,8 +50,8 @@ class AsistenteReporteVentas(models.TransientModel):
                         total_lineas_bien += l.price_unit*l.quantity*(100-l.discount)/100
 
                 iva = 0
-                for i in f.invoice_line_ids:
-                    if i.id == w.impuesto_id.id:
+                for i in f.tax_line_ids:
+                    if i.tax_id.id == w.impuesto_id.id:
                         iva += i.amount
                 if f.amount_total*iva > 0:
                     iva = total_quetzales/f.amount_total*iva
@@ -69,12 +69,15 @@ class AsistenteReporteVentas(models.TransientModel):
                     r.append('NC')
 
                 # Serie y numero
-                if f.number:
-                    r.append(f.number[0])
-                    r.append(f.number[1:])
+                if f.number and len(f.number.split('-',1)) > 1:
+                    r.append(f.number.split('-', 1)[0])
+                    r.append(f.number.split('-', 1)[1])
+                elif f.numero_viejo and len(f.numero_viejo.split('-',1)) > 1:
+                    r.append(f.numero_viejo.split('-', 1)[0])
+                    r.append(f.numero_viejo.split('-', 1)[1])
                 else:
-                    r.append(f.internal_number[0])
-                    r.append(f.internal_number[1:])
+                    r.append('')
+                    r.append('')
 
                 # Fecha
                 r.append(datetime.strptime(f.date_invoice,'%Y-%m-%d').strftime('%d/%m/%Y'))
@@ -123,7 +126,7 @@ class AsistenteReporteVentas(models.TransientModel):
                         r.append('FAUCA')
                         r.append(f.fauca)
                     elif f.dua:
-                        r.append('DUA')
+                        r.appenasld('DUA')
                         r.append(f.dua)
                     else:
                         r.append('')
@@ -243,16 +246,17 @@ class AsistenteReporteVentas(models.TransientModel):
                 result.append(r)
 
             texto = ""
+            logging.warn(result)
             for l in sorted(result, key=lambda x: x[1]+'-'+x[3]+'-'+x[0]+'-'+x[5]):
                 l.pop(0)
                 if len(l) < 30:
                     logging.warn(l)
-                texto += '\t'.join(l)+"\r\n"
+                texto += '|'.join(l)+"\r\n"
 
             logging.warn(texto)
 
             datos = base64.b64encode(texto.encode('utf-8'))
-            self.write({'archivo':datos, 'name':'asiste_ibros.txt'})
+            self.write({'archivo':datos, 'name':'asiste_ibros.asl'})
 
         return {
             'view_type': 'form',
