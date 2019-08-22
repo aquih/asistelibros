@@ -27,16 +27,14 @@ class AsistenteReporteCompras(models.TransientModel):
                 total_quetzales = 0
                 total_lineas_servicio = 0
                 total_lineas_bien = 0
-                if f.partner_id.country_id and f.partner_id.country_id.id != 91:
-                    local = False
-                if f.dua:
+                if f.partner_id.country_id and f.partner_id.country_id.id != f.company_id.country_id.id:
                     local = False
 
                 if f.currency_id.id == f.company_id.currency_id.id:
                     total_quetzales = abs(f.amount_total)
                 else:
                     if f.move_id:
-                        for l in f.move_id.line_id:
+                        for l in f.move_id.line_ids:
                             if l.account_id.id == f.account_id.id:
                                 total_quetzales += l.debit - l.credit
                     total_quetzales = abs(total_quetzales)
@@ -64,7 +62,7 @@ class AsistenteReporteCompras(models.TransientModel):
 
                 r = [
                     f.date_invoice,
-                    '1', # Establecimiento
+                    str(f.journal_id.codigo_establecimiento), # Establecimiento
                     'C' # Compra/Venta
                 ]
 
@@ -74,7 +72,7 @@ class AsistenteReporteCompras(models.TransientModel):
                         r.append('FPC')
                     elif f.dua:
                         r.append('DA')
-                    elif f.dua:
+                    elif f.fauca:
                         r.append('FA')
                     elif f.reference and len(f.reference.split()[0]) > 6:
                         r.append('FCE')
@@ -103,7 +101,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('0')
 
                 # Nombre
-                r.append(f.partner_id.name.replace(',',''))
+                r.append(f.partner_id.name)
 
                 # Local o importacion
                 if local:
@@ -114,9 +112,9 @@ class AsistenteReporteCompras(models.TransientModel):
                 # Bien o servicio de importacion
                 if not local and not f.dua:
                     if f.tipo_gasto in ['compra','importacion','combustible','mixto']:
-                        r.append('BIEN')
+                        r.append('Bien')
                     else:
-                        r.append('SERVICIO')
+                        r.append('Servicio')
                 else:
                     r.append('')
 
@@ -130,7 +128,7 @@ class AsistenteReporteCompras(models.TransientModel):
                 r.append('')
 
                 # FAUCA o DUA
-                if not local and not f.dua:
+                if not local:
                     if f.fauca:
                         r.append('FAUCA')
                         r.append(f.fauca)
@@ -145,7 +143,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('')
 
                 # Valor bien local
-                if f.state in ['cancel'] or peq:
+                if peq:
                     r.append('')
                 else:
                     if local and not f.cadi and f.amount_total != 0:
@@ -154,7 +152,7 @@ class AsistenteReporteCompras(models.TransientModel):
                         r.append('0')
 
                 # Valor bien importacion
-                if f.state in ['cancel'] or peq:
+                if peq:
                     r.append('')
                 else:
                     if not local and not f.cadi and f.amount_total != 0:
@@ -163,7 +161,7 @@ class AsistenteReporteCompras(models.TransientModel):
                         r.append('0')
 
                 # Valor servicio local
-                if f.state in ['cancel'] or peq:
+                if peq:
                     r.append('')
                 else:
                     if local and not f.cadi and f.amount_total != 0:
@@ -172,7 +170,7 @@ class AsistenteReporteCompras(models.TransientModel):
                         r.append('0')
 
                 # Valor servicio importacion
-                if f.state in ['cancel'] or peq:
+                if peq:
                     r.append('')
                 else:
                     if not local and not f.cadi and f.amount_total != 0:
@@ -181,7 +179,7 @@ class AsistenteReporteCompras(models.TransientModel):
                         r.append('0')
 
                 # Valor exento bien local
-                if f.state in ['cancel'] or peq:
+                if peq:
                     r.append('')
                 else:
                     if local and f.cadi and f.amount_total != 0:
@@ -190,7 +188,7 @@ class AsistenteReporteCompras(models.TransientModel):
                         r.append('0')
 
                 # Valor exento bien importacion
-                if f.state in ['cancel'] or peq:
+                if peq:
                     r.append('')
                 else:
                     if not local and f.cadi and f.amount_total != 0:
@@ -199,7 +197,7 @@ class AsistenteReporteCompras(models.TransientModel):
                         r.append('0')
 
                 # Valor exento servicio local
-                if f.state in ['cancel'] or peq:
+                if peq:
                     r.append('')
                 else:
                     if local and f.cadi and f.amount_total != 0:
@@ -208,7 +206,7 @@ class AsistenteReporteCompras(models.TransientModel):
                         r.append('0')
 
                 # Valor exento servicio importacion
-                if f.state in ['cancel'] or peq:
+                if peq:
                     r.append('')
                 else:
                     if not local and f.cadi and f.amount_total != 0:
@@ -226,13 +224,13 @@ class AsistenteReporteCompras(models.TransientModel):
                 r.append('')
 
                 # Valor bien pequeño local
-                if f.state in ['cancel'] or not peq:
+                if not peq:
                     r.append('')
                 else:
                     r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_bien))
 
                 # Valor servicios pequeño local
-                if f.state in ['cancel'] or not peq:
+                if not peq:
                     r.append('')
                 else:
                     r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_servicio))
@@ -244,19 +242,13 @@ class AsistenteReporteCompras(models.TransientModel):
                 r.append('')
 
                 # IVA
-                if f.state in ['cancel']:
-                    r.append('')
-                else:
-                    r.append('%.2f' % 0)
+                r.append('%.2f' % iva)
 
                 # Total
-                if f.state in ['cancel']:
-                    r.append('%.2f' % 0)
+                if f.amount_total*(total_lineas_bien+total_lineas_servicio) > 0:
+                    r.append('%.2f' % (total_quetzales/f.amount_total*(total_lineas_bien+total_lineas_servicio)))
                 else:
-                    if f.amount_total*(total_lineas_bien+total_lineas_servicio) > 0:
-                        r.append('%.2f' % (total_quetzales/f.amount_total*(total_lineas_bien+total_lineas_servicio)))
-                    else:
-                        r.append('%.2f' % 0)
+                    r.append('%.2f' % 0)
 
                 result.append(r)
 
@@ -269,8 +261,8 @@ class AsistenteReporteCompras(models.TransientModel):
 
             logging.warn(texto)
 
-            datos = base64.b64encode(texto.encode('utf-8'))
-            self.write({'archivo':datos, 'name':'asiste_libros.asl'})
+            datos = base64.b64encode(texto.rstrip().encode('utf-8'))
+            self.write({'archivo':datos, 'name':'asiste_libros_compras.asl'})
 
         return {
             'view_type': 'form',

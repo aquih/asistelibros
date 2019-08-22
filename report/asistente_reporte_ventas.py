@@ -19,7 +19,7 @@ class AsistenteReporteVentas(models.TransientModel):
             dict['fecha_hasta'] = w['fecha_hasta']
             dict['fecha_desde'] = w['fecha_desde']
 
-            facturas_id = self.env['account.invoice'].search([  ['state','in',['open','cancel','paid']]  ,['date_invoice', '>=',  w.fecha_desde ], ['date_invoice', '<=',  w.fecha_hasta ],['journal_id','in',diarios_id]])
+            facturas_id = self.env['account.invoice'].search([['state','in',['open','cancel','paid']], ['date_invoice', '>=',  w.fecha_desde ], ['date_invoice', '<=',  w.fecha_hasta ], ['journal_id','in',diarios_id]])
 
             for f in facturas_id:
                 doc_criva = f.criva
@@ -37,7 +37,7 @@ class AsistenteReporteVentas(models.TransientModel):
                     total_quetzales = abs(f.amount_total)
                 else:
                     if f.move_id:
-                        for l in f.move_id.line_id:
+                        for l in f.move_id.line_ids:
                             if l.account_id.id == f.account_id.id:
                                 total_quetzales += l.debit - l.credit
                     total_quetzales = abs(total_quetzales)
@@ -58,13 +58,16 @@ class AsistenteReporteVentas(models.TransientModel):
 
                 r = [
                     f.date_invoice,
-                    '1', # Establecimiento
+                    str(f.journal_id.codigo_establecimiento), # Establecimiento
                     'V' # Compra/Venta
                 ]
 
                 # Documento
                 if f.type == 'out_invoice':
-                    r.append('FC')
+                    if 'firma_fel' in f.fields_get() and f.firma_fel:
+                        r.append('FCE')
+                    else:
+                        r.append('FC')
                 else:
                     r.append('NC')
 
@@ -91,7 +94,7 @@ class AsistenteReporteVentas(models.TransientModel):
                     r.append('0')
 
                 # Nombre
-                r.append(f.partner_id.name.replace(',',''))
+                r.append(f.partner_id.name)
 
                 # Local o exportacion
                 if local:
@@ -102,9 +105,9 @@ class AsistenteReporteVentas(models.TransientModel):
                 # Bien o servicio de exportacion
                 if not local:
                     if f.tipo_gasto in ['compra','importacion','combustible','mixto']:
-                        r.append('BIEN')
+                        r.append('Bien')
                     else:
-                        r.append('SERVICIO')
+                        r.append('Servicio')
                 else:
                     r.append('')
 
@@ -148,7 +151,10 @@ class AsistenteReporteVentas(models.TransientModel):
                 if f.state in ['cancel']:
                     r.append('')
                 else:
-                    r.append('0')
+                    if not local and not f.cadi and f.amount_total != 0:
+                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_bien))
+                    else:
+                        r.append('0')
 
                 # Valor servicio local
                 if f.state in ['cancel']:
@@ -163,7 +169,10 @@ class AsistenteReporteVentas(models.TransientModel):
                 if f.state in ['cancel']:
                     r.append('')
                 else:
-                    r.append('0')
+                    if not local and not f.cadi and f.amount_total != 0:
+                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_servicio))
+                    else:
+                        r.append('0')
 
                 # Valor exento bien local
                 if f.state in ['cancel']:
@@ -232,7 +241,7 @@ class AsistenteReporteVentas(models.TransientModel):
                 if f.state in ['cancel']:
                     r.append('')
                 else:
-                    r.append('%.2f' % 0)
+                    r.append('%.2f' % iva)
 
                 # Total
                 if f.state in ['cancel']:
@@ -255,8 +264,8 @@ class AsistenteReporteVentas(models.TransientModel):
 
             logging.warn(texto)
 
-            datos = base64.b64encode(texto.encode('utf-8'))
-            self.write({'archivo':datos, 'name':'asiste_ibros.asl'})
+            datos = base64.b64encode(texto.rstrip().encode('utf-8'))
+            self.write({'archivo':datos, 'name':'asiste_libros_ventas.asl'})
 
         return {
             'view_type': 'form',
