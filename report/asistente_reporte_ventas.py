@@ -24,13 +24,11 @@ class AsistenteReporteVentas(models.TransientModel):
             for f in facturas_id:
                 doc_criva = f.criva
                 criva = f.valor_constancia
-
                 local = True
                 total_quetzales = 0
                 total_lineas_servicio = 0
                 total_lineas_bien = 0
-
-                if f.partner_id.country_id and f.partner_id.country_id.id != 91:
+                if f.partner_id.country_id and f.partner_id.country_id.id != f.company_id.country_id.id:
                     local = False
 
                 if f.currency_id.id == f.company_id.currency_id.id:
@@ -75,6 +73,9 @@ class AsistenteReporteVentas(models.TransientModel):
                 if f.number and len(f.number.split('-',1)) > 1:
                     r.append(f.number.split('-', 1)[0])
                     r.append(f.number.split('-', 1)[1])
+                elif 'firma_fel' in f.fields_get() and f.firma_fel:
+                    r.append(f.serie_fel)
+                    r.append(f.numero_fel)
                 elif f.numero_viejo and len(f.numero_viejo.split('-',1)) > 1:
                     r.append(f.numero_viejo.split('-', 1)[0])
                     r.append(f.numero_viejo.split('-', 1)[1])
