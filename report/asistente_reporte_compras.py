@@ -74,7 +74,7 @@ class AsistenteReporteCompras(models.TransientModel):
                         r.append('DA')
                     elif f.fauca:
                         r.append('FA')
-                    elif f.reference and len(f.reference.split()[0]) > 6:
+                    elif f.reference and len(f.reference.split('-')[0]) > 6:
                         r.append('FCE')
                     else:
                         r.append('FC')
