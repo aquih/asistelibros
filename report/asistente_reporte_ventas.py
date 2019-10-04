@@ -74,7 +74,7 @@ class AsistenteReporteVentas(models.TransientModel):
                     r.append(f.number.split('-', 1)[0])
                     r.append(f.number.split('-', 1)[1])
                 elif 'firma_fel' in f.fields_get() and f.firma_fel:
-                    r.append(f.serie_fel)
+                    r.append('FACE'+f.serie_fel)
                     r.append(f.numero_fel)
                 elif f.numero_viejo and len(f.numero_viejo.split('-',1)) > 1:
                     r.append(f.numero_viejo.split('-', 1)[0])
