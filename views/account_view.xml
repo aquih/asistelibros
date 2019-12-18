@@ -29,5 +29,18 @@
             </field>
         </record>
 
+         <record model="ir.ui.view" id="asistelibros_view_account_journal_form">
+            <field name="name">asistelibros.view_account_journal_form</field>
+            <field name="model">account.journal</field>
+            <field name="inherit_id" ref="account.view_account_journal_form"/>
+            <field name="arch" type="xml">
+                <data>
+                    <field name="code" required="0" position="after">
+                        <field name="codigo_establecimiento"/>
+                    </field>
+                </data>
+            </field>
+        </record>
+
     </data>
 </openerp>

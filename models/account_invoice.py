@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, exceptions, fields, models, _
-from odoo.tools import float_is_zero, float_compare, pycompat
+from odoo.tools import float_is_zero, float_compare #, pycompat
 from odoo.tools.misc import formatLang
 
 from odoo.exceptions import AccessError, UserError, RedirectWarning, ValidationError, Warning
