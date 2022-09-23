@@ -1,10 +1,6 @@
 # -*- encoding: utf-8 -*-
 
 from openerp import models, fields, api, _
-from openerp.exceptions import UserError, ValidationError
-from datetime import datetime
-import time
-import xlwt
 import base64
 import io
 import logging
@@ -15,13 +11,23 @@ class AsistenteReporteCompras(models.TransientModel):
     def print_report_excel_asistelibros(self):
         for w in self:
             result = []
-            dict = {}
-            diarios_id = [x.id for x in w.diarios_id]
-            dict['fecha_hasta'] = w['fecha_hasta']
-            dict['fecha_desde'] = w['fecha_desde']
+            journal_ids = [x.id for x in w['diarios_id']]
+            filtro = [
+                ('state','in',['posted']),
+                ('journal_id','in',journal_ids),
+                ('date','<=',w['fecha_hasta']),
+                ('date','>=',w['fecha_desde']),
+            ]
+            
+            if 'type' in self.env['account.move'].fields_get():
+                filtro.append(('type','in',['in_invoice','in_refund']))
+            else:
+                filtro.append(('move_type','in',['in_invoice','in_refund']))
+            
+            facturas = self.env['account.move'].search(filtro)
+            impuesto = self.env['account.tax'].browse(w['impuesto_id'][0])
 
-            facturas_id = self.env['account.invoice'].search([  ['state','in',['open','paid']]  ,['date_invoice', '>=',  w.fecha_desde ], ['date_invoice', '<=',  w.fecha_hasta ],['journal_id','in',diarios_id]])
-            for f in facturas_id:
+            for f in facturas:
                 local = True
                 peq = f.partner_id.pequenio_contribuyente
                 total_quetzales = 0
@@ -30,51 +36,56 @@ class AsistenteReporteCompras(models.TransientModel):
                 if f.partner_id.country_id and f.partner_id.country_id.id != f.company_id.country_id.id:
                     local = False
 
+                tipo_cambio = 1
                 if f.currency_id.id == f.company_id.currency_id.id:
                     total_quetzales = abs(f.amount_total)
                 else:
-                    if f.move_id:
-                        for l in f.move_id.line_ids:
-                            if l.account_id.id == f.account_id.id:
+                    if f.line_ids:
+                        for l in f.line_ids:
+                            if l.account_id.reconcile:
                                 total_quetzales += l.debit - l.credit
+                    tipo_cambio = total_quetzales / f.amount_total
                     total_quetzales = abs(total_quetzales)
 
                 for l in f.invoice_line_ids:
                     if f.tipo_gasto == 'servicio':
                         if not f.cadi:
-                            if len(l.invoice_line_tax_ids) > 0 or peq:
+                            if len(l.tax_ids) > 0 or peq:
                                 total_lineas_servicio += l.price_unit*l.quantity*(100-l.discount)/100
                         else:
                             total_lineas_servicio += l.price_unit*l.quantity*(100-l.discount)/100
                     else:
                         if not f.cadi:
-                            if len(l.invoice_line_tax_ids) > 0 or peq:
+                            if len(l.tax_ids) > 0 or peq:
                                 total_lineas_bien += l.price_unit*l.quantity*(100-l.discount)/100
                         else:
                             total_lineas_bien += l.price_unit*l.quantity*(100-l.discount)/100
 
                 iva = 0
-                for i in f.tax_line_ids:
-                    if i.tax_id.id == w.impuesto_id.id:
-                        iva += i.amount
-                if f.amount_total*iva > 0:
-                    iva = total_quetzales/f.amount_total*iva
+                for l in f.invoice_line_ids:
+                    precio = ( l.price_unit * (1-(l.discount or 0.0)/100.0) ) * tipo_cambio
+                    r = l.tax_ids.compute_all(precio, currency=f.currency_id, quantity=l.quantity, product=l.product_id, partner=f.partner_id)
+    
+                    if len(l.tax_ids) > 0:
+                        for i in r['taxes']:
+                            if i['id'] == w['impuesto_id'].id:
+                                iva += i['amount']
 
                 r = [
-                    f.date_invoice,
+                    f.date,
                     str(f.journal_id.codigo_establecimiento), # Establecimiento
                     'C' # Compra/Venta
                 ]
 
                 # Documento
-                if f.type == 'in_invoice':
+                if f.type if 'type' in self.env['account.move'].fields_get() else f.move_type == 'in_invoice':
                     if peq:
                         r.append('FPC')
                     elif f.dua:
                         r.append('DA')
                     elif f.fauca:
                         r.append('FA')
-                    elif f.reference and len(f.reference.split('-')[0]) > 6:
+                    elif f.ref and len(f.ref.split('-')[0]) > 6:
                         r.append('FCE')
                     else:
                         r.append('FC')
@@ -82,15 +93,15 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('NC')
 
                 # Serie y numero
-                if f.reference and len(f.reference.split('-', 1)) > 1:
-                    r.append(f.reference.split('-', 1)[0])
-                    r.append(f.reference.split('-', 1)[1])
+                if f.ref and len(f.ref.split('-', 1)) > 1:
+                    r.append(f.ref.split('-', 1)[0])
+                    r.append(f.ref.split('-', 1)[1])
                 else:
-                    r.append("")
-                    r.append("")
+                    r.append('')
+                    r.append('')
 
                 # Fecha
-                r.append(datetime.strptime(f.date_invoice,'%Y-%m-%d').strftime('%d/%m/%Y'))
+                r.append(f.date.strftime('%d/%m/%Y'))
 
                 # NIT
                 if f.state in ['cancel']:
@@ -147,7 +158,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('')
                 else:
                     if local and not f.cadi and f.amount_total != 0:
-                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_bien))
+                        r.append('%.2f' % (tipo_cambio*total_lineas_bien))
                     else:
                         r.append('0')
 
@@ -156,7 +167,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('')
                 else:
                     if not local and not f.cadi and f.amount_total != 0:
-                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_bien))
+                        r.append('%.2f' % (tipo_cambio*total_lineas_bien))
                     else:
                         r.append('0')
 
@@ -165,7 +176,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('')
                 else:
                     if local and not f.cadi and f.amount_total != 0:
-                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_servicio))
+                        r.append('%.2f' % (tipo_cambio*total_lineas_servicio))
                     else:
                         r.append('0')
 
@@ -174,7 +185,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('')
                 else:
                     if not local and not f.cadi and f.amount_total != 0:
-                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_servicio))
+                        r.append('%.2f' % (tipo_cambio*total_lineas_servicio))
                     else:
                         r.append('0')
 
@@ -183,7 +194,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('')
                 else:
                     if local and f.cadi and f.amount_total != 0:
-                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_bien))
+                        r.append('%.2f' % (tipo_cambio*total_lineas_bien))
                     else:
                         r.append('0')
 
@@ -192,7 +203,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('')
                 else:
                     if not local and f.cadi and f.amount_total != 0:
-                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_bien))
+                        r.append('%.2f' % (tipo_cambio*total_lineas_bien))
                     else:
                         r.append('0')
 
@@ -201,7 +212,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('')
                 else:
                     if local and f.cadi and f.amount_total != 0:
-                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_servicio))
+                        r.append('%.2f' % (tipo_cambio*total_lineas_servicio))
                     else:
                         r.append('0')
 
@@ -210,7 +221,7 @@ class AsistenteReporteCompras(models.TransientModel):
                     r.append('')
                 else:
                     if not local and f.cadi and f.amount_total != 0:
-                        r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_servicio))
+                        r.append('%.2f' % (tipo_cambio*total_lineas_servicio))
                     else:
                         r.append('0')
 
@@ -227,13 +238,13 @@ class AsistenteReporteCompras(models.TransientModel):
                 if not peq:
                     r.append('')
                 else:
-                    r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_bien))
+                    r.append('%.2f' % (tipo_cambio*total_lineas_bien))
 
                 # Valor servicios pequeño local
                 if not peq:
                     r.append('')
                 else:
-                    r.append('%.2f' % (total_quetzales/f.amount_total*total_lineas_servicio))
+                    r.append('%.2f' % (tipo_cambio*total_lineas_servicio))
 
                 # Valor bien pequeño importacion
                 r.append('')
@@ -246,20 +257,20 @@ class AsistenteReporteCompras(models.TransientModel):
 
                 # Total
                 if f.amount_total*(total_lineas_bien+total_lineas_servicio) > 0:
-                    r.append('%.2f' % (total_quetzales/f.amount_total*(total_lineas_bien+total_lineas_servicio)))
+                    r.append('%.2f' % (tipo_cambio*(total_lineas_bien+total_lineas_servicio)))
                 else:
                     r.append('%.2f' % 0)
 
                 result.append(r)
 
             texto = ""
-            for l in sorted(result, key=lambda x: x[1]+'-'+x[3]+'-'+x[0]+'-'+x[5]):
+            for l in sorted(result, key=lambda x: x[1]+'-'+x[3]+'-'+str(x[0])+'-'+x[5]):
                 l.pop(0)
                 if len(l) < 30:
-                    logging.warn(l)
+                    logging.warning(l)
                 texto += '|'.join(l)+"\r\n"
 
-            logging.warn(texto)
+            logging.warning(texto)
 
             datos = base64.b64encode(texto.rstrip().encode('utf-8'))
             self.write({'archivo':datos, 'name':'asiste_libros_compras.asl'})

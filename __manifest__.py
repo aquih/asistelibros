@@ -13,8 +13,9 @@
 
     'category': 'Uncategorized',
     'version': '0.1',
+    'license': 'Other OSI approved licence',
 
-    'depends': ['account','l10n_gt_extra'],
+    'depends': ['l10n_gt_extra'],
 
     'data': [
         'views/report.xml',
