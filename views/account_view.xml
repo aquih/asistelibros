@@ -1,10 +1,11 @@
-<openerp>
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
     <data>
 
-        <record id="asistelibrost_view_move_form" model="ir.ui.view">
+        <record id="asistelibros_view_move_form" model="ir.ui.view">
             <field name="name">asistelibros.account.move.form</field>
             <field name="model">account.move</field>
-            <field name="inherit_id" ref="l10n_gt_extra.l10n_gt_view_move_form"/>
+            <field name="inherit_id" ref="l10n_gt_extra.view_move_form"/>
             <field name="arch" type="xml">
                 <field name="final_rango" position="after">
                     <field name="criva"/>
@@ -16,4 +17,4 @@
         </record>
 
     </data>
-</openerp>
+</odoo>
